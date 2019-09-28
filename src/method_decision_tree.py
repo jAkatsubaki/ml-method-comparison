@@ -12,6 +12,8 @@ from sklearn.linear_model import Perceptron
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
 from sklearn import tree
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import ExtraTreesClassifier
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -30,114 +32,51 @@ bias = 0.289
 
 fig = plt.figure(figsize=(10,10))
 
-def run_svm(X, Y, mesh_data):
+def run_extra_tree_classifier(X, Y ,mesh_data):
     print("""
 --------------------------------
 
-        Support Vector Machine
-
---------------------------------""") 
-    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, random_state=0)
-
-    # LinearSVC
-    linear_svc = LinearSVC()
-    linear_svc.fit(X, Y)
-
-    # 予測　
-    Y_pred = linear_svc.predict(X_test)
-    sns.heatmap(np.flipud(linear_svc.predict(mesh_data).reshape(row, col)), ax=fig.add_subplot(2,2,4))
-    fig.add_subplot(2,2,4).set_title('SVM')
-
-    # 評価
-    score = linear_svc.score(X_test, Y_test)
-
-    coef = linear_svc.coef_[0]
-    intercept = linear_svc.intercept_
-
-    line = np.linspace(-1, np.pi * 2)
-    coef = linear_svc.coef_[0]
-    intercept = linear_svc.intercept_
-
-    print("score = %.3f" % (score))
-    print("Coef =", coef)
-    print("Intercept =", intercept)
-
-    ax = fig.add_subplot(2,2,1)
-    ax.plot(line, -(line * coef[0] + intercept) / coef[1], c='b', label="SVM")
-
-def run_logistic_regression(X, Y, mesh_data):
-    print("""
---------------------------------
-
-        Logistic Regression
+        Extremely Randomized Trees
 
 --------------------------------""")
-    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, random_state=0)
+    clf = ExtraTreesClassifier(random_state=0)
+    clf = clf.fit(X, Y)
+    
+    df = pd.DataFrame(mesh_data, columns=["x", "y"])
+    df["val"] = pd.Series(clf.predict(mesh_data)).apply(lambda x: "#e0d3cc" if x==0. else "#a87f5d")
+    sns.scatterplot(df["x"], df["y"], c=df["val"], ax=fig.axes[3] , linewidth=0, s=2)
+    fig.axes[3].set_title('Extremely Randomized Trees')
 
-    # LogisticRegression
-    logreg = LogisticRegression(penalty='l2', solver="sag")
-    logreg.fit(X, Y)
-
-    # 予測　
-    Y_pred = logreg.predict(X_test)
-    sns.heatmap(np.flipud(logreg.predict(mesh_data).reshape(row, col)), ax=fig.add_subplot(2,2,3))
-    fig.add_subplot(2,2,3).set_title('Logistic Regression')
-
-    #
-    # 評価
-    #
-    # 平均絶対誤差(MAE)
-    mae = mean_absolute_error(Y_test, Y_pred)
-    # 平方根平均二乗誤差（RMSE）
-    rmse = np.sqrt(mean_squared_error(Y_test, Y_pred))
-    # スコア
-    score = logreg.score(X_test, Y_test)
-
-    line = np.linspace(-1, np.pi * 2)
-    coef = logreg.coef_[0]
-    intercept = logreg.intercept_
-
-    print("MAE = %.3f,  RMSE = %.3f,  score = %.3f" % (mae, rmse, score))
-    print("Coef =", coef)
-    print("Intercept =", intercept)
-
-    ax = fig.add_subplot(2,2,1)
-    ax.plot(line, -(line * coef[0] + intercept) / coef[1], c='r', label="Logistic Regression")
-
-def run_perceptron(X, Y, mesh_data):
+def run_random_forest(X, Y, mesh_data):
     print("""
 --------------------------------
 
-        Perceptron
+        Random Forest
 
 --------------------------------""")
-    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, random_state=0)
-    # Perceptron
-    ppt = Perceptron()
-    ppt.fit(X_train, Y_train)
+    clf = RandomForestClassifier(random_state=0)
+    clf = clf.fit(X, Y)
+    
+    df = pd.DataFrame(mesh_data, columns=["x", "y"])
+    df["val"] = pd.Series(clf.predict(mesh_data)).apply(lambda x: "#e0d3cc" if x==0. else "#a87f5d")
+    sns.scatterplot(df["x"], df["y"], c=df["val"], ax=fig.axes[2] , linewidth=0, s=2)
+    fig.axes[2].set_title('Random Forest')
 
-    # 予測
-    Y_pred = ppt.predict(X_test)
-    sns.heatmap(np.flipud(ppt.predict(mesh_data).reshape(row, col)), ax=fig.add_subplot(2,2,2))
-    fig.add_subplot(2,2,2).set_title('Percptron')
+def run_decision_tree(X, Y, mesh_data):
+    print("""
+--------------------------------
 
-    # 平均絶対誤差(MAE)
-    mae = mean_absolute_error(Y_test, Y_pred)
-    # 平方根平均二乗誤差（RMSE）
-    rmse = np.sqrt(mean_squared_error(Y_test, Y_pred))
-    # スコア
-    score = ppt.score(X_test, Y_test)
+        Decision Tree
 
-    line = np.linspace(-1, np.pi * 2)
-    coef = ppt.coef_[0]
-    intercept = ppt.intercept_
+--------------------------------""")
+    clf = tree.DecisionTreeClassifier(max_depth=4)
+    clf = clf.fit(X, Y)
+    
+    df = pd.DataFrame(mesh_data, columns=["x", "y"])
+    df["val"] = pd.Series(clf.predict(mesh_data)).apply(lambda x: "#e0d3cc" if x==0. else "#a87f5d")
+    sns.scatterplot(df["x"], df["y"], c=df["val"], ax=fig.axes[1] , linewidth=0, s=2)
+    fig.axes[1].set_title('Decision Tree')
 
-    print("MAE = %.3f,  RMSE = %.3f,  score = %.3f" % (mae, rmse, score))
-    print("Coef =", coef)
-    print("Intercept =", intercept)
-
-    ax = fig.add_subplot(2,2,1)
-    ax.plot(line, -(line * coef[0] + intercept) / coef[1], c='g', label="Perceptron")
 
 if __name__ == "__main__":
     dim = 10000
@@ -152,12 +91,14 @@ if __name__ == "__main__":
 
     df = pd.DataFrame(data.T, columns=['x1', 'y1', 'x2', 'y2'])
 
-    ax = fig.add_subplot(2,2,1)
-    sns.scatterplot(x="x1", y="y1", data=df, ax=ax)
-    sns.scatterplot(x="x2", y="y2", data=df, ax=ax)
-    ax.set_xlim([0, 2 * np.pi])
-    ax.set_ylim([-1, 1])
-    plt.savefig(f'{TOP_DIR}/out/dataset.png')
+    for i in [1,2,3,4]:
+        temp = fig.add_subplot(2,2,i)
+        sns.scatterplot(x="x1", y="y1", data=df, ax=temp, linewidth=0, s=2)
+        sns.scatterplot(x="x2", y="y2", data=df, ax=temp, linewidth=0, s=2)
+        temp.set_xlim([0, 2 * np.pi])
+        temp.set_ylim([-1, 1])
+
+    plt.savefig(f'{TOP_DIR}/out/dataset_tree.png')
 
     X = pd.DataFrame([], columns=['x', 'y'])
 
@@ -185,10 +126,9 @@ if __name__ == "__main__":
         temp = np.hstack([x[i].reshape(col, 1), y[i].reshape(col, 1)])
         test_x = np.vstack([test_x, temp])
 
-    run_perceptron(X.values, Y, test_x)
-    run_logistic_regression(X.values, Y, test_x)
-    run_svm(X.values, Y, test_x)
+    run_decision_tree(X.values, Y, test_x)
+    run_random_forest(X.values, Y, test_x)
+    run_extra_tree_classifier(X.values, Y, test_x)
 
-    ax.legend()
-    plt.savefig(f'{TOP_DIR}/out/dataset_binary_classification.png')
+    plt.savefig(f'{TOP_DIR}/out/dataset_binary_classification_tree.png')
     plt.clf()

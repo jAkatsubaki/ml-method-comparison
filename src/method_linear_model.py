@@ -45,8 +45,6 @@ def run_svm(X, Y, mesh_data):
 
     # 予測　
     Y_pred = linear_svc.predict(X_test)
-    sns.heatmap(np.flipud(linear_svc.predict(mesh_data).reshape(row, col)), ax=fig.add_subplot(2,2,4))
-    fig.add_subplot(2,2,4).set_title('SVM')
 
     # 評価
     score = linear_svc.score(X_test, Y_test)
@@ -62,8 +60,10 @@ def run_svm(X, Y, mesh_data):
     print("Coef =", coef)
     print("Intercept =", intercept)
 
-    ax = fig.add_subplot(2,2,1)
-    ax.plot(line, -(line * coef[0] + intercept) / coef[1], c='b', label="SVM")
+    df = pd.DataFrame(mesh_data, columns=["x", "y"])
+    df["val"] = pd.Series(linear_svc.predict(mesh_data)).apply(lambda x: "#e0d3cc" if x==0. else "#a87f5d")
+    sns.scatterplot(df["x"], df["y"], c=df["val"], ax=fig.axes[3] , linewidth=0, s=2)
+    fig.axes[3].set_title('SVM')
 
 def run_logistic_regression(X, Y, mesh_data):
     print("""
@@ -80,8 +80,6 @@ def run_logistic_regression(X, Y, mesh_data):
 
     # 予測　
     Y_pred = logreg.predict(X_test)
-    sns.heatmap(np.flipud(logreg.predict(mesh_data).reshape(row, col)), ax=fig.add_subplot(2,2,3))
-    fig.add_subplot(2,2,3).set_title('Logistic Regression')
 
     #
     # 評価
@@ -101,8 +99,10 @@ def run_logistic_regression(X, Y, mesh_data):
     print("Coef =", coef)
     print("Intercept =", intercept)
 
-    ax = fig.add_subplot(2,2,1)
-    ax.plot(line, -(line * coef[0] + intercept) / coef[1], c='r', label="Logistic Regression")
+    df = pd.DataFrame(mesh_data, columns=["x", "y"])
+    df["val"] = pd.Series(logreg.predict(mesh_data)).apply(lambda x: "#e0d3cc" if x==0. else "#a87f5d")
+    sns.scatterplot(df["x"], df["y"], c=df["val"], ax=fig.axes[2] , linewidth=0, s=2)
+    fig.axes[2].set_title('Logistic Regression')
 
 def run_perceptron(X, Y, mesh_data):
     print("""
@@ -118,8 +118,6 @@ def run_perceptron(X, Y, mesh_data):
 
     # 予測
     Y_pred = ppt.predict(X_test)
-    sns.heatmap(np.flipud(ppt.predict(mesh_data).reshape(row, col)), ax=fig.add_subplot(2,2,2))
-    fig.add_subplot(2,2,2).set_title('Percptron')
 
     # 平均絶対誤差(MAE)
     mae = mean_absolute_error(Y_test, Y_pred)
@@ -136,8 +134,10 @@ def run_perceptron(X, Y, mesh_data):
     print("Coef =", coef)
     print("Intercept =", intercept)
 
-    ax = fig.add_subplot(2,2,1)
-    ax.plot(line, -(line * coef[0] + intercept) / coef[1], c='g', label="Perceptron")
+    df = pd.DataFrame(mesh_data, columns=["x", "y"])
+    df["val"] = pd.Series(ppt.predict(mesh_data)).apply(lambda x: "#e0d3cc" if x==0. else "#a87f5d")
+    sns.scatterplot(df["x"], df["y"], c=df["val"], ax=fig.axes[1] , linewidth=0, s=2)
+    fig.axes[1].set_title('Perceptron')
 
 if __name__ == "__main__":
     dim = 10000
@@ -152,12 +152,14 @@ if __name__ == "__main__":
 
     df = pd.DataFrame(data.T, columns=['x1', 'y1', 'x2', 'y2'])
 
-    ax = fig.add_subplot(2,2,1)
-    sns.scatterplot(x="x1", y="y1", data=df, ax=ax)
-    sns.scatterplot(x="x2", y="y2", data=df, ax=ax)
-    ax.set_xlim([0, 2 * np.pi])
-    ax.set_ylim([-1, 1])
-    plt.savefig(f'{TOP_DIR}/out/dataset.png')
+    for i in [1,2,3,4]:
+        temp = fig.add_subplot(2,2,i)
+        sns.scatterplot(x="x1", y="y1", data=df, ax=temp, linewidth=0, s=2)
+        sns.scatterplot(x="x2", y="y2", data=df, ax=temp, linewidth=0, s=2)
+        temp.set_xlim([0, 2 * np.pi])
+        temp.set_ylim([-1, 1])
+    
+    plt.savefig(f'{TOP_DIR}/out/dataset_linearmodel.png')
 
     X = pd.DataFrame([], columns=['x', 'y'])
 
@@ -189,6 +191,5 @@ if __name__ == "__main__":
     run_logistic_regression(X.values, Y, test_x)
     run_svm(X.values, Y, test_x)
 
-    ax.legend()
-    plt.savefig(f'{TOP_DIR}/out/dataset_binary_classification.png')
+    plt.savefig(f'{TOP_DIR}/out/dataset_binary_classification_linearmodel.png')
     plt.clf()
